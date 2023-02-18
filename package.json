@@ -1,0 +1,28 @@
+{
+  "name": "last2leave3bot",
+  "version": "1.0.0",
+  "description": "Discord bot for L2L3",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "nodemon src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZombieNW/Last2Leave3Bot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js"
+  ],
+  "author": "ZombieNW",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ZombieNW/Last2Leave3Bot/issues"
+  },
+  "homepage": "https://github.com/ZombieNW/Last2Leave3Bot#readme",
+  "dependencies": {
+    "discord.js": "^14.7.1",
+    "dotenv": "^16.0.3"
+  }
+}
