@@ -129,7 +129,6 @@ client.on("voiceStateUpdate", (oldState, newState) => {
             });
         });
         if (didTheyComeBack == false) {
-        if (didTheyComeBack == false) {
             //Changed
             if (!newState.channel) {
                 //If user LEFT VC
