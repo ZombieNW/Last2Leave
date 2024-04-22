@@ -129,6 +129,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
             });
         });
         if (didTheyComeBack == false) {
+        if (didTheyComeBack == false) {
             //Changed
             if (!newState.channel) {
                 //If user LEFT VC
@@ -140,6 +141,7 @@ client.on("voiceStateUpdate", (oldState, newState) => {
                 //If user SWAPPED VC
                 controlLog(`:arrow_right: User ${newState.member.displayName} moved from ${oldStateName} to ${newStateName}`);
             }
+            if (!participantUsers[oldState.member.user.id]) participantUsers[oldState.member.user.id] = Date.now(); //Only set if undefined
             if (!participantUsers[oldState.member.user.id]) participantUsers[oldState.member.user.id] = Date.now(); //Only set if undefined
         }
     }
