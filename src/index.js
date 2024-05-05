@@ -31,6 +31,7 @@ channelRoleMap.set("1231376441741152266", "1231376719043231836"); //Lobby 8
 
 const timezoneRoles = {
     "UTC-07:00 (PDT)": "1231412543654854706",
+    "UTC-07:00 (Arizona)": "1231412543654854706",
     "UTC-06:00 (MDT)": "1231412583052083281",
     "UTC-05:00 (CDT)": "1231412615213879369",
     "UTC-04:00 (EDT)": "1231412644167155802",
@@ -75,6 +76,10 @@ const commands = [
                     {
                         name: "UTC-07:00 (PDT)",
                         value: "UTC-07:00 (PDT)"
+                    },
+                    {
+                        name: "UTC-07:00 (Arizona)",
+                        value: "UTC-07:00 (Arizona)"
                     },
                     {
                         name: "UTC-06:00 (MDT)",
@@ -284,7 +289,6 @@ client.on("interactionCreate", async (interaction) => {
 //ELIMINATE USERS GONE FOR 1 MINUTE
 setInterval(() => {
     const currentTime = new Date().getTime();
-
     for (let user in participantUsers) {
         if (Date.now() - 60e3 > participantUsers[user]) {
             //If 1 minute has elapsed
@@ -299,13 +303,18 @@ setInterval(() => {
                         // User doesn't have a time zone role, eliminate them
                         eliminateUser(member);
                     } else {
-                        const userTimeZoneOffset = getOffsetMilliseconds(userTimeZoneRole);
-                        const userLocalTime = new Date(currentTime + userTimeZoneOffset);
-                        const userLocalHour = userLocalTime.getHours();
-
+                        const userLocalHour = getCurrentHour(userTimeZoneRole);
                         if (userLocalHour >= 22 || userLocalHour < 10) {
-                            // User's local time is between 11 PM and 10 AM, don't eliminate
-                            return;
+                            //between 10 and 11 am
+                            participantUsers[user] = Date.now();
+                            if (userLocalHour == 9) {
+                                //if 10 am
+                                const userLocalMinute = getCurrentMinute(userTimeZoneRole);
+                                const difference = 60 - userLocalMinute;
+                                if (difference <= 5 || difference == 30 || difference == 15 || difference == 60) {
+                                    controlLog(`<@${member.id}> must return within ${difference} minutes or else they will be eliminated!`);
+                                }
+                            }
                         } else {
                             // User's local time is outside the allowed range, eliminate them
                             eliminateUser(member);
@@ -338,30 +347,75 @@ async function isVCsLocked(guild) {
 
 //Eliminate User
 function eliminateUser(member) {
-    delete participantUsers[member.user.id];
-    channelRoleMap.forEach(function (value, key) {
-        //Iterate Through ChannelRoleMap
-        guild.roles.fetch(value).then((role) => {
-            //Find Role from Role ID
-            if (member._roles.includes(role.id)) {
-                //If member has role
-                member.roles.remove(role);
-                controlLog(`:bangbang: User ${member.displayName} has been eliminated.`);
-            } else {
-                return;
-            }
+    client.guilds.fetch(process.env.GUILD_ID).then((guild) => {
+        delete participantUsers[member.user.id];
+        channelRoleMap.forEach(function (value, key) {
+            //Iterate Through ChannelRoleMap
+            guild.roles.fetch(value).then((role) => {
+                //Find Role from Role ID
+                if (member._roles.includes(role.id)) {
+                    //If member has role
+                    member.roles.remove(role);
+                    controlLog(`:bangbang: User ${member.displayName} has been eliminated.`);
+                } else {
+                    return;
+                }
+            });
         });
     });
 }
 
 //Timezone Calculation
-function getOffsetMilliseconds(timeZoneString) {
-    const offsetHours = parseInt(timeZoneString.slice(4, 6), 10);
-    const offsetMinutes = parseInt(timeZoneString.slice(7, 9), 10);
-    const offsetMilliseconds = (offsetHours * 60 + offsetMinutes) * 60 * 1000;
-    const isNegative = timeZoneString.startsWith("-");
+function getCurrentHour(timezoneString) {
+    const timezoneData = {
+        "UTC-07:00 (PDT)": "America/Los_Angeles",
+        "UTC-07:00 (Arizona)": "America/Phoenix",
+        "UTC-06:00 (MDT)": "America/Denver",
+        "UTC-05:00 (CDT)": "America/Chicago",
+        "UTC-04:00 (EDT)": "America/New_York",
+        "UTC+01:00 (BST)": "Europe/London",
+        "UTC+02:00 (CEST)": "Europe/Berlin"
+    };
+    const name = timezoneData[timezoneString];
+    const adjustedTime = new Date().getTime();
 
-    return isNegative ? -offsetMilliseconds : offsetMilliseconds;
+    const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: name,
+        hourCycle: "h23",
+        hour: "2-digit"
+    });
+
+    return formatter.format(adjustedTime);
 }
+
+function getCurrentMinute(timezoneString) {
+    const timezoneData = {
+        "UTC-07:00 (PDT)": "America/Los_Angeles",
+        "UTC-07:00 (Arizona)": "America/Phoenix",
+        "UTC-06:00 (MDT)": "America/Denver",
+        "UTC-05:00 (CDT)": "America/Chicago",
+        "UTC-04:00 (EDT)": "America/New_York",
+        "UTC+01:00 (BST)": "Europe/London",
+        "UTC+02:00 (CEST)": "Europe/Berlin"
+    };
+    const name = timezoneData[timezoneString];
+    const adjustedTime = new Date().getTime();
+
+    const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: name,
+        hourCycle: "h23",
+        minute: "2-digit"
+    });
+
+    return formatter.format(adjustedTime);
+}
+
+// console.log(getCurrentHour("UTC-07:00 (PDT)"));
+// console.log(getCurrentHour("UTC-07:00 (Arizona)"));
+// console.log(getCurrentHour("UTC-06:00 (MDT)"));
+// console.log(getCurrentHour("UTC-05:00 (CDT)"));
+// console.log(getCurrentHour("UTC-04:00 (EDT)"));
+// console.log(getCurrentHour("UTC+01:00 (BST)"));
+// console.log(getCurrentHour("UTC+02:00 (CEST)"));
 
 client.login(process.env.BOT_TOKEN);
